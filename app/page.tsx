@@ -222,7 +222,7 @@ export default function Home() {
       {activeTab === 'list' && (
         <div>
           {editingProduct ? (
-            /* MODAL / EDITIERFORMULAR */
+            /* EDITIERFORMULAR */
             <form onSubmit={handleUpdateDate} style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
               <h3 style={{ marginTop: 0 }}>Datum ändern</h3>
               <p><strong>Produkt:</strong> {editingProduct.product_name}</p>
@@ -254,34 +254,51 @@ export default function Home() {
                 products.map((item) => {
                   const days = getDaysRemaining(item.expiry_date);
                   
-                  // Farbkennzeichnung je nach Dringlichkeit
-                  let badgeBg = '#dcfce7'; // Grün
+                  // Standard-Design
+                  let cardBg = '#ffffff';
+                  let cardBorder = '#e2e8f0';
+                  let badgeBg = '#dcfce7'; 
                   let badgeText = '#15803d';
                   let daysLabel = `Noch ${days} Tage`;
 
+                  // HEUTE ABLAUFEND -> Auffällige Färbung!
                   if (days === 0) {
-                    badgeBg = '#fef3c7'; // Gelb
-                    badgeText = '#b45309';
-                    daysLabel = 'Heute abgelaufen!';
-                  } else if (days < 0) {
-                    badgeBg = '#fee2e2'; // Rot
-                    badgeText = '#b91c1c';
+                    cardBg = '#fef9c3'; // Helles Warn-Gelb für die Karte
+                    cardBorder = '#eab308'; // Kräftige gelbe Umrandung
+                    badgeBg = '#ca8a04'; // Dunkelgelb/Gold Badge
+                    badgeText = '#ffffff';
+                    daysLabel = '⚠️ ABLAUFDATUM HEUTE!';
+                  } 
+                  // BEREITS ABGELAUFEN
+                  else if (days < 0) {
+                    cardBg = '#fef2f2'; // Zartes Rot
+                    cardBorder = '#fca5a5';
+                    badgeBg = '#dc2626'; // Rot
+                    badgeText = '#ffffff';
                     daysLabel = `Seit ${Math.abs(days)} Tag(en) abgelaufen`;
-                  } else if (days <= 3) {
-                    badgeBg = '#ffedd5'; // Orange
-                    badgeText = '#c2410c';
-                    daysLabel = `Dringend: Noch ${days} Tage`;
+                  } 
+                  // BALD ABLAUFEND (1 - 3 Tage)
+                  else if (days <= 3) {
+                    cardBg = '#fff7ed'; // Zartes Orange
+                    cardBorder = '#ffedd5';
+                    badgeBg = '#ea580c'; // Orange
+                    badgeText = '#ffffff';
+                    daysLabel = `Dringend: Noch ${days} Tag(e)`;
                   }
 
                   return (
                     <div 
                       key={item.id} 
                       style={{ 
-                        display: 'flex', alignItems: 'center', gap: '12px', background: '#fff', 
-                        padding: '10px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' 
+                        display: 'flex', alignItems: 'center', gap: '12px', 
+                        background: cardBg, 
+                        padding: '10px 12px', 
+                        borderRadius: '8px', 
+                        border: `2px solid ${cardBorder}`, 
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)' 
                       }}>
                       {/* Vorschaubild */}
-                      <div style={{ width: '60px', height: '60px', borderRadius: '6px', overflow: 'hidden', background: '#f1f5f9', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: '60px', height: '60px', borderRadius: '6px', overflow: 'hidden', background: '#e2e8f0', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {item.image_url ? (
                           <img src={item.image_url} alt={item.product_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         ) : (
@@ -291,13 +308,15 @@ export default function Home() {
 
                       {/* Produkt-Infos */}
                       <div style={{ flex: 1 }}>
-                        <strong style={{ fontSize: '16px', display: 'block', marginBottom: '2px' }}>{item.product_name}</strong>
+                        <strong style={{ fontSize: '16px', display: 'block', marginBottom: '2px', color: '#0f172a' }}>
+                          {item.product_name}
+                        </strong>
                         
-                        <div style={{ display: 'inline-block', background: badgeBg, color: badgeText, fontSize: '11px', fontWeight: 'bold', padding: '2px 6px', borderRadius: '4px', marginBottom: '4px' }}>
+                        <div style={{ display: 'inline-block', background: badgeBg, color: badgeText, fontSize: '11px', fontWeight: 'bold', padding: '3px 8px', borderRadius: '4px', marginBottom: '4px' }}>
                           {daysLabel}
                         </div>
 
-                        <div style={{ fontSize: '12px', color: '#64748b' }}>
+                        <div style={{ fontSize: '12px', color: '#475569' }}>
                           MHD: {new Date(item.expiry_date + 'T00:00:00').toLocaleDateString('de-CH')}
                         </div>
                       </div>
@@ -306,12 +325,12 @@ export default function Home() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <button 
                           onClick={() => setEditingProduct(item)} 
-                          style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '6px 8px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
+                          style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '6px 8px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>
                           ✏️ Datum
                         </button>
                         <button 
                           onClick={() => handleDelete(item.id, item.product_name)} 
-                          style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', padding: '6px 8px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>
+                          style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', padding: '6px 8px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>
                           🗑️ Löschen
                         </button>
                       </div>
