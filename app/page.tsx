@@ -19,6 +19,7 @@ export default function Home() {
 
   // Daten-Zustände
   const [products, setProducts] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [editingProduct, setEditingProduct] = useState<any>(null);
 
   useEffect(() => {
@@ -137,6 +138,19 @@ export default function Home() {
     }
   };
 
+  // Gefilterte Produkte basierend auf der Suchleiste (Name oder Datum)
+  const filteredProducts = products.filter((item) => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return true;
+
+    const formattedDate = new Date(item.expiry_date + 'T00:00:00').toLocaleDateString('de-CH');
+    const nameMatch = item.product_name.toLowerCase().includes(query);
+    const rawDateMatch = item.expiry_date.includes(query);
+    const formattedDateMatch = formattedDate.includes(query);
+
+    return nameMatch || rawDateMatch || formattedDateMatch;
+  });
+
   return (
     <main style={{ maxWidth: '500px', margin: '0 auto', padding: '16px', fontFamily: 'system-ui, sans-serif' }}>
       <h2 style={{ textAlign: 'center', marginBottom: '16px' }}>📦 MHD-Tracker</h2>
@@ -248,40 +262,56 @@ export default function Home() {
             </form>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {products.length === 0 ? (
-                <p style={{ textAlign: 'center', color: '#64748b' }}>Noch keine Produkte erfasst.</p>
+              {/* SUCHLEISTE */}
+              <div style={{ marginBottom: '6px' }}>
+                <input 
+                  type="text" 
+                  value={searchQuery} 
+                  onChange={(e) => setSearchQuery(e.target.value)} 
+                  placeholder="🔍 Nach Name oder Datum suchen..." 
+                  style={{ 
+                    width: '100%', padding: '10px 14px', borderRadius: '8px', 
+                    border: '1px solid #cbd5e1', fontSize: '14px', boxSizing: 'border-box' 
+                  }}
+                />
+              </div>
+
+              {filteredProducts.length === 0 ? (
+                <p style={{ textAlign: 'center', color: '#64748b', marginTop: '16px' }}>
+                  {searchQuery ? 'Keine passenden Produkte gefunden.' : 'Noch keine Produkte erfasst.'}
+                </p>
               ) : (
-                products.map((item) => {
+                filteredProducts.map((item) => {
                   const days = getDaysRemaining(item.expiry_date);
                   
-                  // Standard-Design
+                  // Standard-Design (Grün)
                   let cardBg = '#ffffff';
                   let cardBorder = '#e2e8f0';
                   let badgeBg = '#dcfce7'; 
                   let badgeText = '#15803d';
                   let daysLabel = `Noch ${days} Tage`;
 
-                  // HEUTE ABLAUFEND -> Auffällige Färbung!
+                  // HEUTE ABLAUFEND -> Gelb/Orange Warnung
                   if (days === 0) {
-                    cardBg = '#fef9c3'; // Helles Warn-Gelb für die Karte
-                    cardBorder = '#eab308'; // Kräftige gelbe Umrandung
-                    badgeBg = '#ca8a04'; // Dunkelgelb/Gold Badge
+                    cardBg = '#fef9c3'; 
+                    cardBorder = '#eab308'; 
+                    badgeBg = '#ca8a04'; 
                     badgeText = '#ffffff';
                     daysLabel = '⚠️ ABLAUFDATUM HEUTE!';
                   } 
                   // BEREITS ABGELAUFEN
                   else if (days < 0) {
-                    cardBg = '#fef2f2'; // Zartes Rot
+                    cardBg = '#fef2f2'; 
                     cardBorder = '#fca5a5';
-                    badgeBg = '#dc2626'; // Rot
+                    badgeBg = '#dc2626'; 
                     badgeText = '#ffffff';
                     daysLabel = `Seit ${Math.abs(days)} Tag(en) abgelaufen`;
                   } 
                   // BALD ABLAUFEND (1 - 3 Tage)
                   else if (days <= 3) {
-                    cardBg = '#fff7ed'; // Zartes Orange
+                    cardBg = '#fff7ed'; 
                     cardBorder = '#ffedd5';
-                    badgeBg = '#ea580c'; // Orange
+                    badgeBg = '#ea580c'; 
                     badgeText = '#ffffff';
                     daysLabel = `Dringend: Noch ${days} Tag(e)`;
                   }
